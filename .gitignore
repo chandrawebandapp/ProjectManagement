@@ -1,0 +1,10 @@
+.venv
+venv
+venv/
+db.sqlite3
+.DS_Store
+.idea/
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
