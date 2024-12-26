@@ -7,9 +7,9 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from api.models import Project
+from api.models import Project, Task
 from api.serializers import UserSignUpSerializer, UserResponseSerializer, TokenObtainPairSerializer, \
-    UserUpdateSerializer, ProjectSerializer
+    UserUpdateSerializer, ProjectSerializer, TaskSerializer
 
 UserModel = get_user_model()
 
@@ -60,3 +60,19 @@ class ProjectViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = ProjectSerializer
     queryset = Project.objects.all()
+
+
+class TaskViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({
+            'project': Project.objects.filter(id=self.kwargs.get('project_id')).first()
+        })
+        return context
+
+    def get_queryset(self):
+        return super(TaskViewSet, self).get_queryset().filter(project_id=self.kwargs.get('project_id'))
