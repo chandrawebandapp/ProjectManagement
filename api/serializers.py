@@ -5,6 +5,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from api.models import Project
+
 UserModel = get_user_model()
 
 
@@ -52,6 +54,13 @@ class UserResponseSerializer(serializers.ModelSerializer):
         fields = ('username', 'email', 'first_name', 'last_name')
 
 
+class UserUpdateSerializer(UserResponseSerializer):
+    class Meta:
+        model = UserModel
+        fields = ('username', 'email', 'first_name', 'last_name')
+        read_only = ('username', 'email')
+
+
 class TokenObtainPairSerializer(TokenObtainSerializer):
     @classmethod
     def get_token(cls, user):
@@ -63,3 +72,13 @@ class TokenObtainPairSerializer(TokenObtainSerializer):
         data['refresh'] = str(refresh)
         data['access'] = str(refresh.access_token)
         return data
+
+
+class ProjectSerializer(UserResponseSerializer):
+    # def create(self, validated_data):
+    #     item = Project.objects.create(owner=self.context.get('request').user, **validated_data)
+    #     return item
+
+    class Meta:
+        model = Project
+        exclude = []

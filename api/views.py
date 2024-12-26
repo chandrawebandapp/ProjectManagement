@@ -3,10 +3,13 @@ from django.shortcuts import render
 from rest_framework import mixins, viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from api.serializers import UserSignUpSerializer, UserResponseSerializer, TokenObtainPairSerializer
+from api.models import Project
+from api.serializers import UserSignUpSerializer, UserResponseSerializer, TokenObtainPairSerializer, \
+    UserUpdateSerializer, ProjectSerializer
 
 UserModel = get_user_model()
 
@@ -44,3 +47,16 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         except TokenError as e:
             raise InvalidToken(e.args[0]) from e
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+
+class UserViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin,
+                  viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserUpdateSerializer
+    queryset = UserModel.objects.all()
+
+
+class ProjectViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProjectSerializer
+    queryset = Project.objects.all()
