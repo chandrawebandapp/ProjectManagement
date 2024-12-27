@@ -1,15 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import render
 from rest_framework import mixins, viewsets, status
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from api.models import Project, Task
+from api.models import Project, Task, Comment
 from api.serializers import UserSignUpSerializer, UserResponseSerializer, TokenObtainPairSerializer, \
-    UserUpdateSerializer, ProjectSerializer, TaskSerializer
+    UserUpdateSerializer, ProjectSerializer, TaskSerializer, CommentSerializer
 
 UserModel = get_user_model()
 
@@ -69,10 +70,37 @@ class TaskViewSet(ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
+        if getattr(self, 'swagger_fake_view', False):
+            return context
+
+        project = Project.objects.filter(id=self.kwargs.get('project_id')).first()
+        if not project:
+            raise NotFound(detail=f"Project with id {self.kwargs.get('task_id')} not found.")
         context.update({
-            'project': Project.objects.filter(id=self.kwargs.get('project_id')).first()
+            'project': project
         })
         return context
 
     def get_queryset(self):
         return super(TaskViewSet, self).get_queryset().filter(project_id=self.kwargs.get('project_id'))
+
+
+class CommentViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CommentSerializer
+    queryset = Comment.objects.all()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        if getattr(self, 'swagger_fake_view', False):
+            return context
+        task = Task.objects.filter(id=self.kwargs.get('task_id')).first()
+        if not task:
+            raise NotFound(detail=f"Task with id {self.kwargs.get('task_id')} not found.")
+        context.update({
+            'task': task
+        })
+        return context
+
+    def get_queryset(self):
+        return super(CommentViewSet, self).get_queryset().filter(task_id=self.kwargs.get('task_id'))

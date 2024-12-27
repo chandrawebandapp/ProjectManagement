@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.models import Project, Task
+from api.models import Project, Task, Comment
 
 UserModel = get_user_model()
 
@@ -93,3 +93,14 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         exclude = []
         read_only_fields = ['project']
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        item = Comment.objects.create(task=self.context.get('task'), **validated_data)
+        return item
+
+    class Meta:
+        model = Comment
+        exclude = []
+        read_only_fields = ['task']
